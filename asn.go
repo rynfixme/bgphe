@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -22,6 +23,8 @@ func (a *ASNScraperProvider[ASNResult]) Scrape(asn string) ASNResult {
 		ch := ele.DOM.Children()
 		prefix := ch.Eq(0).Children().Eq(-1).Text()
 		desc := ch.Eq(1).Text()
+		re := regexp.MustCompile(`(\t|\n| {2,})`)
+		desc = re.ReplaceAllString(desc, "")
 
 		ipv4_prefix = append(ipv4_prefix, ASNIPV4Prefix{prefix, desc})
 	})
@@ -30,6 +33,8 @@ func (a *ASNScraperProvider[ASNResult]) Scrape(asn string) ASNResult {
 		ch := ele.DOM.Children()
 		prefix := ch.Eq(0).Children().Eq(-1).Text()
 		desc := ch.Eq(1).Text()
+		re := regexp.MustCompile(`(\t|\n| {2,})`)
+		desc = re.ReplaceAllString(desc, "")
 
 		ipv6_prefix = append(ipv6_prefix, ASNIPV6Prefix{prefix, desc})
 	})
@@ -38,39 +43,6 @@ func (a *ASNScraperProvider[ASNResult]) Scrape(asn string) ASNResult {
 	err := col.Visit(url)
 	if err != nil {
 		log.Fatalln(err, url)
-	}
-
-	return ASNResult{ipv4_prefix, ipv6_prefix}
-}
-
-func (a *ASNScraperProvider[ASNResult]) ScrapeMulti(asns []string) ASNResult {
-	ipv4_prefix := []ASNIPV4Prefix{}
-	ipv6_prefix := []ASNIPV6Prefix{}
-	col := colly.NewCollector()
-
-	col.OnHTML(`table#table_prefixes4 > tbody > tr`, func(ele *colly.HTMLElement) {
-		ch := ele.DOM.Children()
-		prefix := ch.Eq(0).Children().Eq(-1).Text()
-		desc := ch.Eq(1).Text()
-
-		ipv4_prefix = append(ipv4_prefix, ASNIPV4Prefix{prefix, desc})
-	})
-
-	col.OnHTML(`table#table_prefixes6 > tbody > tr`, func(ele *colly.HTMLElement) {
-		ch := ele.DOM.Children()
-		prefix := ch.Eq(0).Children().Eq(-1).Text()
-		desc := ch.Eq(1).Text()
-
-		ipv6_prefix = append(ipv6_prefix, ASNIPV6Prefix{prefix, desc})
-	})
-
-	for _, asn := range asns {
-		url := "https://bgp.he.net/" + url.QueryEscape(asn)
-		err := col.Visit(url)
-		time.Sleep(250 * time.Microsecond)
-		if err != nil {
-			log.Fatalln(err, url)
-		}
 	}
 
 	return ASNResult{ipv4_prefix, ipv6_prefix}
@@ -91,6 +63,7 @@ func (a *ASNFileReaderProvider) ReadFromFile(f *os.File) []string {
 		result = append(result, t)
 	}
 
+	fmt.Println("file result", result)
 	return result
 }
 
@@ -130,5 +103,17 @@ func (a *ASNClient) SearchMulti() ASNResult {
 		log.Fatalln("ASN list not specified.")
 	}
 
-	return a.S.ScrapeMulti(*a.ASNs)
+	if len(*a.ASNs) == 0 {
+		log.Fatalln("Empty ASN list is not allowed.")
+	}
+
+	result := ASNResult{[]ASNIPV4Prefix{}, []ASNIPV6Prefix{}}
+	for _, asn := range *a.ASNs {
+		r := a.S.Scrape(asn)
+		result.IPV4Prefix = append(result.IPV4Prefix, r.IPV4Prefix...)
+		result.IPV6Prefix = append(result.IPV6Prefix, r.IPV6Prefix...)
+		time.Sleep(250 * time.Millisecond)
+	}
+
+	return result
 }

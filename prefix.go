@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/gocolly/colly"
 )
@@ -40,42 +41,6 @@ func (p *PrefixScraperProvider[PrefixResult]) Scrape(prefix string) PrefixResult
 	err := col.Visit(url)
 	if err != nil {
 		log.Fatalln(err, url)
-	}
-
-	return PrefixResult{dns}
-}
-
-func (p *PrefixScraperProvider[PrefixResult]) ScrapeMulti(prefixes []string) PrefixResult {
-	col := colly.NewCollector()
-	dns := []PrefixDNSRecord{}
-
-	col.OnHTML(`div#dnsrecords > table > tbody > tr`, func(ele *colly.HTMLElement) {
-		var ptr *string
-		var a *string
-		ch := ele.DOM.Children()
-		ip := ch.Eq(0).Children().Eq(0).Text()
-
-		ptrtxt := ch.Eq(1).Text()
-		ptr = &ptrtxt
-		if *ptr == "" {
-			ptr = nil
-		}
-
-		atxt := ch.Eq(2).Children().Eq(0).Text()
-		a = &atxt
-		if *a == "" {
-			a = nil
-		}
-
-		dns = append(dns, PrefixDNSRecord{ip, ptr, a})
-	})
-
-	for _, prefix := range prefixes {
-		url := "https://bgp.he.net/net/" + prefix
-		err := col.Visit(url)
-		if err != nil {
-			log.Fatalln(err, url)
-		}
 	}
 
 	return PrefixResult{dns}
@@ -126,10 +91,20 @@ func (p *PrefixClient) Search() PrefixResult {
 	return p.S.Scrape(*p.Prefix)
 }
 
-func (p *PrefixClient) SearchMulti() PrefixResult {
-	if p.Prefixes == nil {
+func (c *PrefixClient) SearchMulti() PrefixResult {
+	if c.Prefixes == nil {
 		log.Fatalln("Prefix not specified.")
 	}
 
-	return p.S.ScrapeMulti(*p.Prefixes)
+	if len(*c.Prefixes) == 0 {
+		log.Fatalln("Empty prefix list is not allowed")
+	}
+
+	result := PrefixResult{[]PrefixDNSRecord{}}
+	for _, prefix := range *c.Prefixes {
+		r := c.S.Scrape(prefix)
+		result.DNS = append(result.DNS, r.DNS...)
+		time.Sleep(250 * time.Millisecond)
+	}
+	return result
 }
