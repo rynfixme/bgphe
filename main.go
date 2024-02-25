@@ -70,7 +70,6 @@ func main() {
 		}
 
 		if asnList != nil {
-			fmt.Println("--list", *asnList)
 			cli = ASNClient{nil, nil, nil, &sprov, &fprov}
 			asns := cli.R.ReadFromFile(*asnList)
 			cli.ASNs = &asns
