@@ -15,7 +15,7 @@ func (p *PrefixScraperProvider[PrefixResult]) Scrape(prefix string) PrefixResult
 	col := colly.NewCollector()
 	dns := []PrefixDNSRecord{}
 
-	col.OnHTML("div#dnsrecords > table > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`div#dnsrecords > table > tbody > tr`, func(ele *colly.HTMLElement) {
 		var ptr *string
 		var a *string
 		ch := ele.DOM.Children()
@@ -49,7 +49,7 @@ func (p *PrefixScraperProvider[PrefixResult]) ScrapeMulti(prefixes []string) Pre
 	col := colly.NewCollector()
 	dns := []PrefixDNSRecord{}
 
-	col.OnHTML("div#dnsrecords > table > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`div#dnsrecords > table > tbody > tr`, func(ele *colly.HTMLElement) {
 		var ptr *string
 		var a *string
 		ch := ele.DOM.Children()

@@ -21,7 +21,7 @@ func (s *SearchScraperProvider[SearchResult]) Scrape(word string) SearchResult {
 
 	col := colly.NewCollector()
 
-	col.OnHTML("div#search > table > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`div#search > table > tbody > tr`, func(ele *colly.HTMLElement) {
 		ch := ele.DOM.Children()
 		result := ch.Eq(0).Children().Eq(0).Text()
 		rtype := ch.Eq(1).Text()

@@ -18,7 +18,7 @@ func (a *ASNScraperProvider[ASNResult]) Scrape(asn string) ASNResult {
 	ipv6_prefix := []ASNIPV6Prefix{}
 	col := colly.NewCollector()
 
-	col.OnHTML("table#table_prefixes4 > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`table#table_prefixes4 > tbody > tr`, func(ele *colly.HTMLElement) {
 		ch := ele.DOM.Children()
 		prefix := ch.Eq(0).Children().Eq(-1).Text()
 		desc := ch.Eq(1).Text()
@@ -26,7 +26,7 @@ func (a *ASNScraperProvider[ASNResult]) Scrape(asn string) ASNResult {
 		ipv4_prefix = append(ipv4_prefix, ASNIPV4Prefix{prefix, desc})
 	})
 
-	col.OnHTML("table#table_prefixes6 > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`table#table_prefixes6 > tbody > tr`, func(ele *colly.HTMLElement) {
 		ch := ele.DOM.Children()
 		prefix := ch.Eq(0).Children().Eq(-1).Text()
 		desc := ch.Eq(1).Text()
@@ -48,7 +48,7 @@ func (a *ASNScraperProvider[ASNResult]) ScrapeMulti(asns []string) ASNResult {
 	ipv6_prefix := []ASNIPV6Prefix{}
 	col := colly.NewCollector()
 
-	col.OnHTML("table#table_prefixes4 > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`table#table_prefixes4 > tbody > tr`, func(ele *colly.HTMLElement) {
 		ch := ele.DOM.Children()
 		prefix := ch.Eq(0).Children().Eq(-1).Text()
 		desc := ch.Eq(1).Text()
@@ -56,7 +56,7 @@ func (a *ASNScraperProvider[ASNResult]) ScrapeMulti(asns []string) ASNResult {
 		ipv4_prefix = append(ipv4_prefix, ASNIPV4Prefix{prefix, desc})
 	})
 
-	col.OnHTML("table#table_prefixes6 > tbody > tr", func(ele *colly.HTMLElement) {
+	col.OnHTML(`table#table_prefixes6 > tbody > tr`, func(ele *colly.HTMLElement) {
 		ch := ele.DOM.Children()
 		prefix := ch.Eq(0).Children().Eq(-1).Text()
 		desc := ch.Eq(1).Text()
