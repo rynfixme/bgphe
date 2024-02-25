@@ -86,8 +86,9 @@ func (a *ASNFileReaderProvider) ReadFromFile(f *os.File) []string {
 	for scanner.Scan() {
 		t := scanner.Text()
 		if !asnPat.Match([]byte(t)) {
-			result = append(result, t)
+			log.Fatalln("Unsupported pattern", scanner)
 		}
+		result = append(result, t)
 	}
 
 	return result
