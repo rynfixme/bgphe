@@ -29,8 +29,9 @@ func main() {
 	case search.FullCommand():
 		prov := SearchScraperProvider[SearchResult]{}
 		c := SearchClient{searchWord, nil, nil, &prov}
-		*c.Result = c.Search()
+		result := c.Search()
 
+		c.Result = &result
 		if c.Result == nil {
 			log.Fatalln("Search fetching has not completed.")
 			return
@@ -46,21 +47,23 @@ func main() {
 
 	case asn.FullCommand():
 		var c ASNClient
+		var result ASNResult
 		sprov := ASNScraperProvider[ASNResult]{}
 		fprov := ASNFileReaderProvider{}
 
 		if asnNumber != nil {
 			c = ASNClient{asnNumber, nil, nil, &sprov, &fprov}
-			*c.Result = c.Search()
+			result = c.Search()
 		}
 
 		if asnList != nil {
 			c = ASNClient{nil, nil, nil, &sprov, &fprov}
 			asns := c.R.ReadFromFile(*asnList)
 			c.ASNs = &asns
-			*c.Result = c.SearchMulti()
+			result = c.SearchMulti()
 		}
 
+		c.Result = &result
 		if c.Result == nil {
 			log.Fatalln("ASN fetching has not completed.")
 			return
@@ -74,21 +77,23 @@ func main() {
 
 	case prefix.FullCommand():
 		var c PrefixClient
+		var result PrefixResult
 		sprov := PrefixScraperProvider[PrefixResult]{}
 		fprov := PrefixFileReaderProvider{}
 
 		if prefixPrefix != nil {
 			c = PrefixClient{prefixPrefix, nil, nil, &sprov, &fprov}
-			*c.Result = c.Search()
+			result = c.Search()
 		}
 
 		if prefixList != nil {
 			c = PrefixClient{nil, nil, &PrefixResult{}, &sprov, &fprov}
 			prefixes := c.R.ReadFromFile(*prefixList)
 			c.Prefixes = &prefixes
-			*c.Result = c.SearchMulti()
+			result = c.SearchMulti()
 		}
 
+		c.Result = &result
 		if c.Result == nil {
 			log.Fatalln("Prefix fetching has not completed.")
 			return
