@@ -30,7 +30,7 @@ func TestPrefixClientSingle(t *testing.T) {
 
 	for _, tt := range testsPrefixSingle {
 		t.Run(tt.Name, func(t *testing.T) {
-			c := PrefixClient{&tt.Args.Prefix, nil, PrefixResult{}, &sprov, &fprov}
+			c := PrefixClient{&tt.Args.Prefix, nil, nil, &sprov, &fprov}
 			got := c.Search()
 
 			var prt = false

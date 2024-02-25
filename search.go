@@ -83,7 +83,7 @@ type SearchResult struct {
 type SearchClient struct {
 	Word   *string
 	Words  *[]string
-	Result SearchResult
+	Result *SearchResult
 	S      Scraper[SearchResult]
 }
 

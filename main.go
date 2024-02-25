@@ -28,79 +28,78 @@ func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 	case search.FullCommand():
 		prov := SearchScraperProvider[SearchResult]{}
-		s := SearchClient{searchWord, nil, SearchResult{}, &prov}
-		s.Search()
+		c := SearchClient{searchWord, nil, nil, &prov}
+		*c.Result = c.Search()
 
-		bytes, err := json.Marshal(s.Result)
+		if c.Result == nil {
+			log.Fatalln("Search fetching has not completed.")
+			return
+		}
+
+		bytes, err := json.Marshal(c.Result)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalln(err)
+			return
 		}
 		fmt.Println(string(bytes))
 		return
 
 	case asn.FullCommand():
+		var c ASNClient
 		sprov := ASNScraperProvider[ASNResult]{}
 		fprov := ASNFileReaderProvider{}
 
 		if asnNumber != nil {
-			a := ASNClient{asnNumber, nil, ASNResult{}, &sprov, &fprov}
-			a.Search()
-
-			bytes, err := json.Marshal(a.Result)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(string(bytes))
-			return
+			c = ASNClient{asnNumber, nil, nil, &sprov, &fprov}
+			*c.Result = c.Search()
 		}
 
 		if asnList != nil {
-			a := ASNClient{nil, nil, ASNResult{}, &sprov, &fprov}
-			asns := a.R.ReadFromFile(*asnList)
-			a.ASNs = &asns
-			a.SearchMulti()
+			c = ASNClient{nil, nil, nil, &sprov, &fprov}
+			asns := c.R.ReadFromFile(*asnList)
+			c.ASNs = &asns
+			*c.Result = c.SearchMulti()
+		}
 
-			bytes, err := json.Marshal(a.Result)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(string(bytes))
+		if c.Result == nil {
+			log.Fatalln("ASN fetching has not completed.")
 			return
 		}
 
-		fmt.Println(app.Help)
+		bytes, err := json.Marshal(c.Result)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(bytes))
 
 	case prefix.FullCommand():
+		var c PrefixClient
 		sprov := PrefixScraperProvider[PrefixResult]{}
 		fprov := PrefixFileReaderProvider{}
 
 		if prefixPrefix != nil {
-			p := PrefixClient{prefixPrefix, nil, PrefixResult{}, &sprov, &fprov}
-			p.Search()
-
-			bytes, err := json.Marshal(p.Result)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(string(bytes))
-			return
+			c = PrefixClient{prefixPrefix, nil, nil, &sprov, &fprov}
+			*c.Result = c.Search()
 		}
 
 		if prefixList != nil {
-			p := PrefixClient{nil, nil, PrefixResult{}, &sprov, &fprov}
-			prefixes := p.R.ReadFromFile(*prefixList)
-			p.Prefixes = &prefixes
-			p.Result = p.SearchMulti()
+			c = PrefixClient{nil, nil, &PrefixResult{}, &sprov, &fprov}
+			prefixes := c.R.ReadFromFile(*prefixList)
+			c.Prefixes = &prefixes
+			*c.Result = c.SearchMulti()
+		}
 
-			bytes, err := json.Marshal(p.Result)
-			if err != nil {
-				log.Fatal(err)
-			}
-			fmt.Println(string(bytes))
+		if c.Result == nil {
+			log.Fatalln("Prefix fetching has not completed.")
 			return
 		}
 
-		fmt.Println(app.Help)
+		bytes, err := json.Marshal(c.Result)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(string(bytes))
+		return
 
 	default:
 		fmt.Println(app.Help)

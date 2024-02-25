@@ -113,7 +113,7 @@ type PrefixResult struct {
 type PrefixClient struct {
 	Prefix   *string
 	Prefixes *[]string
-	Result   PrefixResult
+	Result   *PrefixResult
 	S        Scraper[PrefixResult]
 	R        Reader
 }

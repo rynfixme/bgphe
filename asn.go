@@ -111,7 +111,7 @@ type ASNResult struct {
 type ASNClient struct {
 	ASN    *string
 	ASNs   *[]string
-	Result ASNResult
+	Result *ASNResult
 	S      Scraper[ASNResult]
 	R      Reader
 }

@@ -34,7 +34,7 @@ func TestASNClientSingle(t *testing.T) {
 
 	for _, tt := range testsASNSingle {
 		t.Run(tt.Name, func(t *testing.T) {
-			c := ASNClient{&tt.Args.ASN, nil, ASNResult{}, &sprov, &fprov}
+			c := ASNClient{&tt.Args.ASN, nil, nil, &sprov, &fprov}
 			got := c.Search()
 
 			if (len(got.IPV4Prefix) > 0) != tt.Expected.ExistsV4 {

@@ -34,7 +34,7 @@ func TestSearchClientSingle(t *testing.T) {
 
 	for _, tt := range testsSearchSingle {
 		t.Run(tt.Name, func(t *testing.T) {
-			c := SearchClient{&tt.Args.Search, nil, SearchResult{}, &sprov}
+			c := SearchClient{&tt.Args.Search, nil, nil, &sprov}
 			got := c.Search()
 
 			if (len(got.ASN) > 0) != tt.Expected.ExistsASN {
