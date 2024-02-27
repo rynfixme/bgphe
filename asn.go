@@ -2,8 +2,9 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
+	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
@@ -18,6 +19,18 @@ func (a *ASNScraperProvider[ASNResult]) Scrape(asn string) ASNResult {
 	ipv4_prefix := []ASNIPV4Prefix{}
 	ipv6_prefix := []ASNIPV6Prefix{}
 	col := colly.NewCollector()
+	col.WithTransport(&http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	})
 
 	col.OnHTML(`table#table_prefixes4 > tbody > tr`, func(ele *colly.HTMLElement) {
 		ch := ele.DOM.Children()
@@ -53,17 +66,22 @@ type ASNFileReaderProvider struct{}
 func (a *ASNFileReaderProvider) ReadFromFile(f *os.File) []string {
 	result := []string{}
 	asnPat := regexp.MustCompile(`AS\d{1,12}`)
+	skipPat := regexp.MustCompile(`\s*#.*AS\d{1,12}`)
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
 		t := scanner.Text()
+
+		if skipPat.Match([]byte(t)) {
+			continue
+		}
+
 		if !asnPat.Match([]byte(t)) {
 			log.Fatalln("Unsupported pattern", scanner)
 		}
 		result = append(result, t)
 	}
 
-	fmt.Println("file result", result)
 	return result
 }
 
@@ -100,7 +118,7 @@ func (a *ASNClient) Search() ASNResult {
 
 func (a *ASNClient) SearchMulti() ASNResult {
 	if a.ASNs == nil {
-		log.Fatalln("ASN list not specified.")
+		log.Fatalln("ASN list is not specified.")
 	}
 
 	if len(*a.ASNs) == 0 {
@@ -112,7 +130,7 @@ func (a *ASNClient) SearchMulti() ASNResult {
 		r := a.S.Scrape(asn)
 		result.IPV4Prefix = append(result.IPV4Prefix, r.IPV4Prefix...)
 		result.IPV6Prefix = append(result.IPV6Prefix, r.IPV6Prefix...)
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	return result
